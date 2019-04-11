@@ -1,1 +1,3 @@
-class FormatError < StandardError; end
+module CalculateReversePolish
+  class FormatError < StandardError; end
+end

@@ -6,38 +6,46 @@ TODO: Delete this and the text above, and describe your gem
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'calculate_reverse_polish'
+```
+    gem build /PATH/TO/calculate_reverse_polish/calculate_reverse_polish.gemspec
+    gem install calculate_reverse_polish.gem
+   
 ```
 
-And then execute:
+or run cli tool
 
-    $ bundle
+```clickhouse
+    ./PATH/TO/bin/calculate_reverse_polish
+```
 
-Or install it yourself as:
 
-    $ gem install calculate_reverse_polish
-
-## Usage
-
-TODO: Write usage instructions here
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+I decided to create a ruby gem as it can be used as a library to build any kind of applications, and is highhly reusable
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Gem is build as small interpertter
 
-## Contributing
+It has `Parser` class, who is parsing input, `Validator`, 
+to validate parsed input, `Errors` module to define custom `FormatError` class. 
+`Core` class playes a role of both Pre-processor and interpretter,
+it extracts arguments from parsed input, puts it into `stack`, 
+then pull from `stack`, creates and runs `Operation` and stores result of operation back into stack.
+It allow us to process multy line input, like 
+```
+>13
+13
+> 10 -
+3
+```
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/calculate_reverse_polish. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+It sound like `Core` class breaks Single Responsibility principle, but in fact it has very narrow interface, 
+and is only responsible for passing input to `process` input. Since app is fairly small such approach is easier to read.
 
-## License
+`Operation` class is responsible for actually running computation.
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+`REPL` module, runs REPL is used `cli` tool. Using `CalculateReversePolish::Core` class it is possible to create all 
+kind of clients.
 
-## Code of Conduct
-
-Everyone interacting in the CalculateReversePolish project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/calculate_reverse_polish/blob/master/CODE_OF_CONDUCT.md).
+Most of specs are written for `Core` class as it absorbs all functionaly and specs are closer to integration specs, 
+which test only interface, but not details of realization.

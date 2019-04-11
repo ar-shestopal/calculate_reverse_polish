@@ -1,43 +1,59 @@
-require 'parser'
-require 'errors'
-require 'operation'
+require 'calculate_reverse_polish/parser'
+require 'calculate_reverse_polish/errors'
+require 'calculate_reverse_polish/operation'
+require 'pry'
 
-class Core
-  def initialize(parser: nil)
-    @parser = parser || Parser.new
-    @error = ''
-    @stack = []
-  end
+module CalculateReversePolish
+  class Core
+    attr_accessor :error, :stack
 
-  def process(input)
-    parsed = parser.parse(input)
-    return error unless valid?(parsed)
-    operation = extract(parsed)
+    def initialize(parser: nil)
+      @parser = parser || Parser.new
+      @stack = []
+    end
 
-    operation.perform
-  end
+    def process(input)
+      parsed_input = parser.parse(input)
 
-  private
+      return error unless valid?(parsed_input)
+      operation = extract(parsed_input)
 
-  def extract(parsed_args)
-    parsed_args = parsed[:args]
-    prev_result = stack.unshift
+      perform_operation(operation)
+    rescue CalculateReversePolish::FormatError => err
+      err
+    end
 
-    arg1 = parsed_args[0]
-    arg2 = parsed_args[1] || prev_result
-    op = parsed[:op]
+    private
 
-    Operation.new(arg1: arg1, arg2: arg2, op: op)
-  end
+    attr_reader :parser
 
+    def extract(parsed_input)
+      parsed_args = parsed_input[:args]
 
+      op = parsed_input[:op]
+      while parsed_args.any?
+        stack.push(parsed_args.shift)
+      end
 
-  attr_reader :parser, :error, :stack
+      arg2 = stack.pop
+      arg1 = stack.pop
 
-  def valid?(parsed)
-    Validator.validate!(parsed)
-  rescue FormatError => err
-    @error = "ERROR: #{err}"
-    false
+      Operation.new(arg1: arg1, arg2: arg2, op: op)
+    end
+
+    def perform_operation(operation)
+      result = operation.perform
+      stack.push(result)
+      binding.pry
+      result
+    end
+
+    def valid?(parsed)
+      Validator.validate!(parsed)
+      true
+    rescue CalculateReversePolish::FormatError => err
+      @error = "ERROR: #{err}"
+      false
+    end
   end
 end
